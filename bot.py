@@ -9,8 +9,9 @@ import nest_asyncio, asyncio
 
 nest_asyncio.apply()
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")  # Environment variable থেকে নেবে
-PIXELDRAIN_API_KEY = os.getenv("PIXELDRAIN_API_KEY")
+# 👉 এখানে সরাসরি টোকেন আর API key রাখা হলো
+BOT_TOKEN = "7843173732:AAEXf9AuZcgGhLz2bVX4NMg3Z87SZCyXlBI"
+PIXELDRAIN_API_KEY = "2a112291-e9f6-42a3-a03e-9b49b14d68e6"
 
 def safe_filename(url):
     parsed = urllib.parse.urlparse(url)
