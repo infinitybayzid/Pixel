@@ -1,17 +1,18 @@
-# Dockerfile
-
-# Use official Python image
 FROM python:3.11-slim
 
-# Set working directory
 WORKDIR /app
 
-# Copy requirements first and install
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the bot code
+# Copy bot code
 COPY bot.py .
 
-# Start the bot
+# Run the bot
 CMD ["python", "bot.py"]
