@@ -7,6 +7,8 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 import nest_asyncio
 import asyncio
 import logging
+import threading
+from app import app  # Flask app import
 
 # -----------------------
 # Logging সেটআপ
@@ -21,10 +23,10 @@ logger = logging.getLogger(__name__)
 nest_asyncio.apply()
 
 # -----------------------
-# কনফিগারেশন
+# কনফিগারেশন - সবকিছু ফাইলের ভিতরে
 # -----------------------
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "7843173732:AAEXf9AuZcgGhLz2bVX4NMg3Z87SZCyXlBI")
-PIXELDRAIN_API_KEY = os.environ.get("PIXELDRAIN_API_KEY", "2a112291-e9f6-42a3-a03e-9b49b14d68e6")
+BOT_TOKEN = "7843173732:AAEXf9AuZcgGhLz2bVX4NMg3Z87SZCyXlBI"
+PIXELDRAIN_API_KEY = "2a112291-e9f6-42a3-a03e-9b49b14d68e6"
 
 # -----------------------
 # Safe filename
@@ -165,15 +167,26 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.error(f"Exception while handling an update: {context.error}")
 
 # -----------------------
+# Start web server in a thread
+# -----------------------
+def run_web_server():
+    app.run(host='0.0.0.0', port=8000, debug=False, use_reloader=False)
+
+# -----------------------
 # Main function
 # -----------------------
 def main():
+    # Start web server in a separate thread
+    web_thread = threading.Thread(target=run_web_server, daemon=True)
+    web_thread.start()
+    logger.info("Web server started on port 8000")
+    
     # Check if BOT_TOKEN is available
     if not BOT_TOKEN:
-        logger.error("BOT_TOKEN not found in environment variables!")
+        logger.error("BOT_TOKEN not found!")
         return
     
-    # Create application
+    # Create Telegram application
     application = ApplicationBuilder().token(BOT_TOKEN).build()
     
     # Add handlers
