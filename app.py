@@ -3,6 +3,7 @@ import re
 import requests
 import tempfile
 import urllib.parse
+import time
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
@@ -10,6 +11,9 @@ app = Flask(__name__)
 # আপনার মূল কোড থেকে কনফিগারেশন
 PIXELDRAIN_API_KEY = "2a112291-e9f6-42a3-a03e-9b49b14d68e6"
 WORKER_URL = "https://cinedrive.blmbd.workers.dev/direct.aspx"
+
+# ক্যাশে স্টোর করার জন্য ডিকশনারি
+cache_store = {}
 
 def safe_filename(url):
     parsed = urllib.parse.urlparse(url)
@@ -126,6 +130,16 @@ def upload_file(url_path):
     else:
         full_url = url_path
 
+    # ক্যাশে চেক করা
+    cache_key = full_url
+    if cache_key in cache_store:
+        cache_data = cache_store[cache_key]
+        # 30 মিনিটের কম হলে ক্যাশে থেকে রিটার্ন
+        if time.time() - cache_data['timestamp'] < 1800:  # 1800 seconds = 30 minutes
+            response_data = cache_data['response']
+            response_data['cached'] = True
+            return jsonify(response_data)
+
     try:
         # গুগল ড্রাইভ URL ডিটেক্ট করা
         google_drive_id = is_google_drive_url(full_url)
@@ -173,6 +187,12 @@ def upload_file(url_path):
                 "worker_url_used": download_url,
                 "source": "google_drive_via_worker"
             })
+        
+        # ক্যাশে সেভ করা
+        cache_store[cache_key] = {
+            'response': response_data,
+            'timestamp': time.time()
+        }
         
         return jsonify(response_data)
         
